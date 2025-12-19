@@ -1,4 +1,4 @@
-// Save this as: api/bern2.js (or api/TAIR_scanner.js in your case)
+// Save this as: api/TAIR_scanner.js
 
 export default async function handler(req, res) {
   // Add CORS headers to allow requests from your frontend
@@ -17,12 +17,22 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('Request body:', JSON.stringify(req.body));
+    
     const { text } = req.body;
 
     // Validate input
-    if (!text || typeof text !== 'string') {
-      return res.status(400).json({ error: 'Text field is required and must be a string' });
+    if (!text) {
+      console.log('Missing text field');
+      return res.status(400).json({ error: 'Text field is required' });
     }
+
+    if (typeof text !== 'string') {
+      console.log('Text is not a string:', typeof text);
+      return res.status(400).json({ error: 'Text must be a string' });
+    }
+
+    console.log('Sending request to BERN2 with text:', text.substring(0, 100));
 
     // Make request to BERN2 API
     const response = await fetch("http://bern2.korea.ac.kr/plain", {
@@ -33,20 +43,28 @@ export default async function handler(req, res) {
       body: JSON.stringify({ text: text })
     });
 
+    console.log('BERN2 response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`BERN2 API error: ${response.status}`);
+      const errorText = await response.text();
+      console.log('BERN2 error response:', errorText);
+      throw new Error(`BERN2 API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('BERN2 response received successfully');
     
     // Return the result
     res.status(200).json(data);
 
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error in handler:", error.message);
+    console.error("Error stack:", error.stack);
+    
     res.status(500).json({ 
       error: 'Failed to process request',
-      details: error.message 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }
