@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     console.log('Sending request to BERN2 with text:', text.substring(0, 100));
 
     // Make request to BERN2 API
-    const response = await fetch("https://bern2.korea.ac.kr/plain", {
+    const response = await fetch("http://bern2.korea.ac.kr/plain", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
